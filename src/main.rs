@@ -13,7 +13,11 @@ struct Args {
 }
 
 fn main() {
-    let args = Args::parse();
+    let args: Args = Args::parse();
+
+    if let Some(categorie) = args.categorie {
+        println!("Categorie: {}", categorie);
+    };
 
     for flag in args.flags.iter() {
         println!("Flag: {}!", flag);
