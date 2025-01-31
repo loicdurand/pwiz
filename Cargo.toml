@@ -5,3 +5,5 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.5.27", features = ["derive"] }
+colored = "3.0.0"
+polodb_core = "5.1.3"

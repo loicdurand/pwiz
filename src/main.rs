@@ -1,4 +1,6 @@
 use clap::Parser;
+use polodb_core::Database;
+use colored::Colorize;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -6,7 +8,7 @@ struct Args {
     /// Catégorie à utiliser pour limiter la recherche à un domaine spécifique ("informatique", "téléphonie", "radio", etc...)
     /// - ex: "pwiz -c informatique -f [...]"
     /// Vous pouvez n'écrire que les premières lettres du terme recherché, par exemple "inf" pour "informatique", "telep" pur "téléphonie"
-    #[arg(short, long,verbatim_doc_comment)]
+    #[arg(short, long, verbatim_doc_comment)]
     categorie: Option<String>,
 
     /// Tags pour la recherche - ex: "dovecot", "messagerie", "pulsar", etc...
@@ -18,12 +20,13 @@ struct Args {
 
 fn main() {
     let args: Args = Args::parse();
+    // let db = Database::open_path("pwiz.db").unwrap();
 
     if let Some(categorie) = args.categorie {
-        println!("Categorie: {}", categorie);
+        println!("Categorie: {}", categorie.blue().bold());
     };
 
     for tag in args.tags.iter() {
-        println!("Tag: {}", tag);
+        println!("Tag: {}", tag.green().bold());
     }
 }
