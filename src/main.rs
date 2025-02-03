@@ -8,7 +8,6 @@ use serde::{Deserialize, Serialize};
 mod fixtures;
 
 #[derive(Debug, Serialize, Deserialize)]
-
 struct Tuto {
     id: i8,
     content: String,
@@ -22,11 +21,23 @@ struct Tag {
 
 fn main() {
     let db = establish_connection();
-    let tutos: Collection<Tuto> = db.collection("tutos");
-    //let tags:Collection<Tag>= db.collection("tags");
-    let tuto = tutos.find_one(doc! {"id":1});
+    // let tutos: Collection<Tuto> = db.collection("tutos");
+    let tags: Collection<Tag> = db.collection("tags");
 
-    println!("tuto: {:?}", tuto);
+    let tags_result = tags.find(doc! {"value":"partition" }).run();
+    match tags_result {
+        Ok(tags) => {
+            for tag in tags {
+                match tag {
+                    Ok(tag) => println!("tags trouvés avec \"partition\": {:?}", tag),
+                    Err(e) => println!("Error retrieving tag: {:?}", e),
+                }
+            }
+        }
+        Err(_) => (),
+    }
+    //let tuto = tutos.find_one(doc! {"id":1});
+    // println!("tuto: {:?}", tuto);
 
     // let commande = Text::new("Que souhaitez-vous faire?").prompt();
 
@@ -41,12 +52,12 @@ pub fn establish_connection() -> Database {
 
     let db_path = env::var("DB_PATH") //on tente de récuperer le chemin de la BDD depuis l'environnement
         .expect("DB_PATH doit etre précisé dans .env"); //si elle n'existe pas on lève une erreur
-    let run_migration = env::var("RUN_MIGRATION") //on vérifie s'il faut lancer les fixtures
-        .expect("RUN_MIGRATION doit etre précisé dans .env"); //si elle n'existe pas on lève une erreur
+    let load_fixtures = env::var("LOAD_FIXTURES") //on vérifie s'il faut lancer les fixtures
+        .expect("LOAD_FIXTURES doit etre précisé dans .env"); //si elle n'existe pas on lève une erreur
 
     let db = Database::open_path(&db_path).unwrap();
 
-    if run_migration.parse::<i8>().unwrap() == 1 {
+    if load_fixtures.parse::<i8>().unwrap() == 1 {
         fixtures::up();
     }
 
