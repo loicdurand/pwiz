@@ -546,6 +546,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "model"
+version = "0.1.0"
+dependencies = [
+ "dotenvy",
+ "polodb_core",
+ "serde",
+]
+
+[[package]]
 name = "newline-converter"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -670,6 +679,7 @@ dependencies = [
  "colored",
  "dotenvy",
  "inquire",
+ "model",
  "polodb_core",
  "serde",
 ]

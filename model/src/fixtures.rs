@@ -2,19 +2,23 @@ use dotenvy::dotenv;
 use std::env;
 
 use polodb_core::{bson::doc, Collection, CollectionT, Database};
-use serde::{Deserialize, Serialize};
+// use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Tuto {
-    id: i8,
-    content: String,
-}
+// #[derive(Debug, Serialize, Deserialize)]
+// struct Tuto {
+//     id: i8,
+//     content: String,
+// }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Tag {
-    tuto_id: i8,
-    value: String,
-}
+// #[derive(Debug, Serialize, Deserialize)]
+// struct Tag {
+//     tuto_id: i8,
+//     value: String,
+// }
+
+use crate::model::model;
+use model::Tuto;
+use model::Tag;
 
 pub fn up() {
     dotenv().ok(); //charge les variables présente dans le .env dans l'environnement

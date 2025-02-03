@@ -2,22 +2,10 @@ use dotenvy::dotenv;
 use std::env;
 
 use polodb_core::{bson::doc, Collection, CollectionT, Database};
-use serde::{Deserialize, Serialize};
 
 //use inquire::Text;
-mod fixtures;
-
-#[derive(Debug, Serialize, Deserialize)]
-struct Tuto {
-    id: i8,
-    content: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct Tag {
-    tuto_id: i8,
-    value: String,
-}
+use model::fixtures;
+use model::Tag;
 
 fn main() {
     let db = establish_connection();
