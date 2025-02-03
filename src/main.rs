@@ -8,16 +8,28 @@ use model::fixtures;
 use model::Tag;
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    let args = &args[1..];
+    let criterias = args
+        .into_iter()
+        .map(|term| doc! {"value":term })
+        .collect::<Vec<_>>();
+    let search = doc! {
+        "$or":criterias
+    };
+
+    println!("Critères de recherche: {:?}", search);
+
     let db = establish_connection();
     // let tutos: Collection<Tuto> = db.collection("tutos");
     let tags: Collection<Tag> = db.collection("tags");
 
-    let tags_result = tags.find(doc! {"value":"partition" }).run();
+    let tags_result = tags.find(search).run();
     match tags_result {
         Ok(tags) => {
             for tag in tags {
                 match tag {
-                    Ok(tag) => println!("tags trouvés avec \"partition\": {:?}", tag),
+                    Ok(tag) => println!("tag trouvé: {:?}", tag),
                     Err(e) => println!("Error retrieving tag: {:?}", e),
                 }
             }
