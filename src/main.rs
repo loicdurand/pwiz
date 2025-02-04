@@ -5,11 +5,14 @@ use polodb_core::{bson::doc, Collection, CollectionT, Database};
 
 //use inquire::Text;
 use model::fixtures;
+use model::Resultat;
 use model::Tag;
+use model::Tuto;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     let args = &args[1..];
+    let max_score: usize = args.len();
     let criterias = args
         .into_iter()
         .map(|term| doc! {"value":term })
@@ -18,21 +21,61 @@ fn main() {
         "$or":criterias
     };
 
-    println!("Critères de recherche: {:?}", search);
+    // println!("Critères de recherche: {:?}", search);
 
     let db = establish_connection();
-    // let tutos: Collection<Tuto> = db.collection("tutos");
+    let tutos: Collection<Tuto> = db.collection("tutos");
     let tags: Collection<Tag> = db.collection("tags");
 
     let tags_result = tags.find(search).run();
     match tags_result {
         Ok(tags) => {
+            //
+            // création du Vec qui contiendra nos résultats de recherche
+            //
+            let mut resultats: Vec<Resultat> = Vec::new();
+            //
             for tag in tags {
                 match tag {
-                    Ok(tag) => println!("tag trouvé: {:?}", tag),
-                    Err(e) => println!("Error retrieving tag: {:?}", e),
+                    Ok(tag) => {
+                        //
+                        println!("tag trouvé: {:?}", tag);
+                        //
+                        let tuto_result =
+                            tutos.find_one(doc! {"id": {"$eq":tag.tuto_id} }).unwrap();
+                        match tuto_result {
+                            Some(tuto) => {
+                                //
+                                println!("==> tuto trouvé pour le tag ci-dessus: {:?}", tuto);
+                                //
+                                // let mut i: usize = 0;
+
+                                // while i != resultats.len() {
+                                let index = resultats[0..].iter().position(|x| x.tuto_id == tuto.id);
+
+                                if let None = index {
+                                    let res = Resultat {
+                                        score: 1,
+                                        max_score,
+                                        tuto_id: tuto.id,
+                                        tags: vec![tag.value],
+                                        content: tuto.content,
+                                    };
+                                    resultats.push(res);
+                                } else if let Some(i) = index {
+                                    resultats[i].up_score();
+                                    resultats[i].tags.push(tag.value);
+                                }
+
+                            }
+                            None => println!("Aucun tuto n'a été trouvé"),
+                        }
+                    }
+                    Err(e) => println!("Erreur survenue lors de la recherche de tags dans la BDD: {:?}", e),
                 }
             }
+
+            println!("Résultats trouvés: {:?}", resultats);
         }
         Err(_) => (),
     }
