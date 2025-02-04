@@ -45,14 +45,8 @@ fn main() {
                                 //
                                 println!("==> tuto trouvé pour le tag ci-dessus: {:?}", tuto);
                                 //
-                                // let mut i: usize = 0;
-
-                                // while i != resultats.len() {
-                                println!("resultats: {:?}", resultats);
                                 let index =
                                     resultats[0..].iter().position(|x| x.tuto_id == tuto.id);
-
-                                println!("index: {:?}", index);
 
                                 if let None = index {
                                     let res = Resultat {
@@ -63,9 +57,9 @@ fn main() {
                                         content: tuto.content,
                                     };
                                     resultats.push(res);
-                                } else if let Some(i) = index {
-                                    resultats[i].up_score();
-                                    resultats[i].tags.push(tag.value);
+                                } else if let Some(index) = index {
+                                    resultats[index].up_score();
+                                    resultats[index].tags.push(tag.value);
                                 }
                             }
                             None => println!("Aucun tuto n'a été trouvé"),
@@ -78,9 +72,12 @@ fn main() {
                 }
             }
 
+            // classement des résultats par score (nombre de tags trouvés)
+            resultats.sort_by(|a, b| b.score.cmp(&a.score));
+            //
             println!(
                 "Résultats trouvés: {:?}",
-                resultats.sort_by(|a, b| b.score.cmp(&a.score))
+                resultats
             );
         }
         Err(_) => (),

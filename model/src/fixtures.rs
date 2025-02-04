@@ -54,7 +54,7 @@ pub fn up() {
     }))
     .unwrap();
 
-    tags.insert_many(["formater", "partition", "fat32"].map(|value| Tag {
+    tags.insert_many(["formater", "partition", "fat32", "disque"].map(|value| Tag {
         tuto_id: 2,
         value: String::from(value),
     }))
