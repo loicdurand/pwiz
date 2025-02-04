@@ -39,10 +39,14 @@ pub fn up() {
         .insert_many([
             Tuto {
                 id: 1,
+                titre: String::from(
+                    "Changer le mot de passe de démarrage sur une station GendBuntu: ex Tiny",
+                ),
                 content: String::from("sudo cryptsetup luksFormat  /dev/hdXX"),
             },
             Tuto {
                 id: 2,
+                titre: String::from("Formater un disque (clé USB par exemple en FAT32"),
                 content: String::from("sudo mkfs.vfat /dev/sdXX"),
             },
         ])
@@ -54,35 +58,19 @@ pub fn up() {
     }))
     .unwrap();
 
-    tags.insert_many(["formater", "partition", "fat32", "disque"].map(|value| Tag {
-        tuto_id: 2,
-        value: String::from(value),
-    }))
+    tags.insert_many(
+        ["formater", "partition", "fat32", "disque"].map(|value| Tag {
+            tuto_id: 2,
+            value: String::from(value),
+        }),
+    )
     .unwrap();
 
-    // tags.insert_many(vec![
-    //     Tag {
-    //         tuto_id: 1,
-    //         value: String::from("chiffrer"),
-    //     },
-    //     Tag {
-    //         tuto_id: 1,
-    //         value: String::from("disque"),
-    //     },
-    //     Tag {
-    //         tuto_id: 1,
-    //         value: String::from("dur"),
-    //     },
-    //     Tag {
-    //         tuto_id: 1,
-    //         value: String::from("partition"),
-    //     },
-    // ])
-    // .unwrap();
+    let tuto1 = tutos.find_one(doc! {"id":1});
+    let tuto2 = tutos.find_one(doc! {"id":2});
 
-    let tuto = tutos.find_one(doc! {"id":1});
-
-    println!("name: {:?}", tuto);
+    println!("Tuto inséré: {:?}", tuto1);
+    println!("Tuto inséré: {:?}", tuto2);
 
     process::exit(1);
 

@@ -47,6 +47,7 @@ fn main() {
                                         max_score,
                                         tuto_id: tuto.id,
                                         tags: vec![tag.value],
+                                        titre: tuto.titre,
                                         content: tuto.content,
                                     };
                                     resultats.push(res);

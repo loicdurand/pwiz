@@ -5,6 +5,7 @@ pub mod model {
     #[derive(Debug, Serialize, Deserialize)]
     pub struct Tuto {
         pub id: i32,
+        pub titre: String,
         pub content: String,
     }
 
@@ -20,6 +21,7 @@ pub mod model {
         pub max_score: usize, // nombre de tags recherchés
         pub tuto_id: i32,
         pub tags: Vec<String>, // tags trouvés parmi les arguments
+        pub titre: String,
         pub content: String,
     }
 
