@@ -1,3 +1,5 @@
+use std::process;
+
 use dotenvy::dotenv;
 use std::env;
 
@@ -17,8 +19,8 @@ use polodb_core::{bson::doc, Collection, CollectionT, Database};
 // }
 
 use crate::model::model;
-use model::Tuto;
 use model::Tag;
+use model::Tuto;
 
 pub fn up() {
     dotenv().ok(); //charge les variables présente dans le .env dans l'environnement
@@ -27,39 +29,62 @@ pub fn up() {
         .expect("DB_PATH doit etre précisé dans .env"); //si elle n'existe pas on lève une erreur
 
     let db = Database::open_path(&db_path).unwrap();
+    db.create_collection("tutos").unwrap();
+    db.create_collection("tags").unwrap();
+
     let tutos = db.collection("tutos");
     let tags: Collection<Tag> = db.collection("tags");
 
     tutos
-        .insert_one(Tuto {
-            id: 1,
-            content: String::from("sudo cryptsetup luksFormat  /dev/hdXX"),
-        })
+        .insert_many([
+            Tuto {
+                id: 1,
+                content: String::from("sudo cryptsetup luksFormat  /dev/hdXX"),
+            },
+            Tuto {
+                id: 2,
+                content: String::from("sudo mkfs.vfat /dev/sdXX"),
+            },
+        ])
         .unwrap();
 
-    tags.insert_many(vec![
-        Tag {
-            tuto_id: 1,
-            value: String::from("chiffrer"),
-        },
-        Tag {
-            tuto_id: 1,
-            value: String::from("disque"),
-        },
-        Tag {
-            tuto_id: 1,
-            value: String::from("dur"),
-        },
-        Tag {
-            tuto_id: 1,
-            value: String::from("partition"),
-        },
-    ])
+    tags.insert_many(["chiffrer", "disque", "dur", "partition"].map(|value| Tag {
+        tuto_id: 1,
+        value: String::from(value),
+    }))
     .unwrap();
+
+    tags.insert_many(["formater", "partition", "fat32"].map(|value| Tag {
+        tuto_id: 2,
+        value: String::from(value),
+    }))
+    .unwrap();
+
+    // tags.insert_many(vec![
+    //     Tag {
+    //         tuto_id: 1,
+    //         value: String::from("chiffrer"),
+    //     },
+    //     Tag {
+    //         tuto_id: 1,
+    //         value: String::from("disque"),
+    //     },
+    //     Tag {
+    //         tuto_id: 1,
+    //         value: String::from("dur"),
+    //     },
+    //     Tag {
+    //         tuto_id: 1,
+    //         value: String::from("partition"),
+    //     },
+    // ])
+    // .unwrap();
 
     let tuto = tutos.find_one(doc! {"id":1});
 
     println!("name: {:?}", tuto);
+
+    process::exit(1);
 
     // let tuto_tags = tags
     //     .find(doc! {

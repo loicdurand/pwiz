@@ -10,9 +10,14 @@ use model::Tag;
 use model::Tuto;
 
 fn main() {
+    let db = establish_connection();
+    let tutos: Collection<Tuto> = db.collection("tutos");
+    let tags: Collection<Tag> = db.collection("tags");
+
     let args: Vec<String> = env::args().collect();
     let args = &args[1..];
     let max_score: usize = args.len();
+    let mut resultats: Vec<Resultat> = Vec::new();
     let criterias = args
         .into_iter()
         .map(|term| doc! {"value":term })
@@ -21,19 +26,11 @@ fn main() {
         "$or":criterias
     };
 
-    // println!("Critères de recherche: {:?}", search);
-
-    let db = establish_connection();
-    let tutos: Collection<Tuto> = db.collection("tutos");
-    let tags: Collection<Tag> = db.collection("tags");
-
     let tags_result = tags.find(search).run();
     match tags_result {
         Ok(tags) => {
             //
             // création du Vec qui contiendra nos résultats de recherche
-            //
-            let mut resultats: Vec<Resultat> = Vec::new();
             //
             for tag in tags {
                 match tag {
@@ -51,7 +48,11 @@ fn main() {
                                 // let mut i: usize = 0;
 
                                 // while i != resultats.len() {
-                                let index = resultats[0..].iter().position(|x| x.tuto_id == tuto.id);
+                                println!("resultats: {:?}", resultats);
+                                let index =
+                                    resultats[0..].iter().position(|x| x.tuto_id == tuto.id);
+
+                                println!("index: {:?}", index);
 
                                 if let None = index {
                                     let res = Resultat {
@@ -66,16 +67,21 @@ fn main() {
                                     resultats[i].up_score();
                                     resultats[i].tags.push(tag.value);
                                 }
-
                             }
                             None => println!("Aucun tuto n'a été trouvé"),
                         }
                     }
-                    Err(e) => println!("Erreur survenue lors de la recherche de tags dans la BDD: {:?}", e),
+                    Err(e) => println!(
+                        "Erreur survenue lors de la recherche de tags dans la BDD: {:?}",
+                        e
+                    ),
                 }
             }
 
-            println!("Résultats trouvés: {:?}", resultats);
+            println!(
+                "Résultats trouvés: {:?}",
+                resultats.sort_by(|a, b| b.score.cmp(&a.score))
+            );
         }
         Err(_) => (),
     }
@@ -98,11 +104,12 @@ pub fn establish_connection() -> Database {
     let load_fixtures = env::var("LOAD_FIXTURES") //on vérifie s'il faut lancer les fixtures
         .expect("LOAD_FIXTURES doit etre précisé dans .env"); //si elle n'existe pas on lève une erreur
 
-    let db = Database::open_path(&db_path).unwrap();
-
     if load_fixtures.parse::<i8>().unwrap() == 1 {
+        // Attention! Le programme quittera après exécution des fixtures: -> remettre LOAD_FIXTURES=0
         fixtures::up();
     }
+
+    let db = Database::open_path(&db_path).unwrap();
 
     return db;
 }
