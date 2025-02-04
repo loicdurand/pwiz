@@ -11,16 +11,15 @@ fn main() {
 
     let query =  prepare_query_from(args);
 
-    let resultats = get_resultat(query, max_score);
+    let resultats = get_resultat(query);
 
     println!("{} résultats trouvés: \n", resultats.len());
 
     for resultat in resultats {
         // 
         let score = &resultat.score;
-        let total = &resultat.max_score;
         let tags = resultat.tags.join(", ");
-        let affichage = format!("{score}/{total} tags trouvés: {tags}");
+        let affichage = format!("{score}/{max_score} tags trouvés: {tags}");
         
         println!(
             "{}\n{}\n>>> {}\n",

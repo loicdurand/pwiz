@@ -37,7 +37,7 @@ pub mod service {
         }
     }
 
-    pub fn get_resultat(query: bson::Document, max_score: usize) -> Vec<Resultat> {
+    pub fn get_resultat(query: bson::Document) -> Vec<Resultat> {
         let db: Database = establish_connection();
         let tutos: Collection<Tuto> = db.collection("tutos");
         let tags: Collection<Tag> = db.collection("tags");
@@ -63,7 +63,6 @@ pub mod service {
                                     if let None = index {
                                         let res = Resultat {
                                             score: 1,
-                                            max_score,
                                             tuto_id: tuto.id,
                                             tags: vec![tag.value],
                                             title: tuto.title,

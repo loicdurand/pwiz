@@ -1,4 +1,4 @@
-pub mod fixtures;
+mod fixtures;
 mod model;
 mod service;
 pub use model::model::*;
