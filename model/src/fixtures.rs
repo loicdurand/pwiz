@@ -39,14 +39,14 @@ pub fn up() {
         .insert_many([
             Tuto {
                 id: 1,
-                titre: String::from(
+                title: String::from(
                     "Changer le mot de passe de démarrage sur une station GendBuntu: ex Tiny",
                 ),
                 content: String::from("sudo cryptsetup luksFormat  /dev/hdXX"),
             },
             Tuto {
                 id: 2,
-                titre: String::from("Formater un disque (clé USB par exemple en FAT32"),
+                title: String::from("Formater un disque (clé USB par exemple en FAT32"),
                 content: String::from("sudo mkfs.vfat /dev/sdXX"),
             },
         ])

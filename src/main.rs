@@ -1,6 +1,7 @@
 use dotenvy::dotenv;
 use std::env;
 
+use comfy_table::Table;
 use polodb_core::{bson, bson::doc, Collection, CollectionT, Database};
 
 //use inquire::Text;
@@ -10,69 +11,31 @@ use model::Tag;
 use model::Tuto;
 
 fn main() {
-    let db: Database = establish_connection();
-    let tutos: Collection<Tuto> = db.collection("tutos");
-    let tags: Collection<Tag> = db.collection("tags");
-
     let args: Vec<String> = env::args().collect();
     let args = &args[1..];
     let max_score: usize = args.len();
-    let mut resultats: Vec<Resultat> = Vec::new(); // Vec qui contiendra nos résultats de recherche
 
     let query = prepare_query_from(args);
 
-    let tags_result = tags.find(query).run();
-    match tags_result {
-        Ok(tags) => {
-            //
-            for tag in tags {
-                match tag {
-                    Ok(tag) => {
-                        //
-                        println!("tag trouvé: {:?}", tag);
-                        //
-                        let tuto_result =
-                            tutos.find_one(doc! {"id": {"$eq":tag.tuto_id} }).unwrap();
-                        match tuto_result {
-                            Some(tuto) => {
-                                //
-                                println!("==> tuto trouvé pour le tag ci-dessus: {:?}", tuto);
-                                //
-                                let index =
-                                    resultats[0..].iter().position(|x| x.tuto_id == tuto.id);
+    let resultats = get_resultat(query, max_score);
 
-                                if let None = index {
-                                    let res = Resultat {
-                                        score: 1,
-                                        max_score,
-                                        tuto_id: tuto.id,
-                                        tags: vec![tag.value],
-                                        titre: tuto.titre,
-                                        content: tuto.content,
-                                    };
-                                    resultats.push(res);
-                                } else if let Some(index) = index {
-                                    resultats[index].score += 1;
-                                    resultats[index].tags.push(tag.value);
-                                }
-                            }
-                            None => println!("Aucun tuto n'a été trouvé"),
-                        }
-                    }
-                    Err(e) => println!(
-                        "Erreur survenue lors de la recherche de tags dans la BDD: {:?}",
-                        e
-                    ),
-                }
-            }
+    println!("Résultats trouvés: {:?}", resultats);
 
-            // classement des résultats par score (nombre de tags trouvés)
-            resultats.sort_by(|a, b| b.score.cmp(&a.score));
-            //
-            println!("Résultats trouvés: {:?}", resultats);
-        }
-        Err(_) => (),
+    for resultat in resultats {
+        let mut table = Table::new();
+        let score = &resultat.score;
+        let total = &resultat.max_score;
+        let tags = resultat.tags.join(", ");
+        let affichage = format!("Tags ({score}/{total})");
+        table
+            // .set_header(vec![resultat.title])
+            .add_row(vec!["Titre", &resultat.title])
+            .add_row(vec!["Contenu", &resultat.content])
+            .add_row(vec![affichage, tags]);
+
+        println!("{table}");
     }
+
     //let tuto = tutos.find_one(doc! {"id":1});
     // println!("tuto: {:?}", tuto);
 
@@ -109,5 +72,69 @@ fn prepare_query_from(args: &[String]) -> bson::Document {
         .collect::<Vec<_>>();
     doc! {
         "$or": criterias
+    }
+}
+
+fn get_resultat(query: bson::Document, max_score: usize) -> Vec<Resultat> {
+    let db: Database = establish_connection();
+    let tutos: Collection<Tuto> = db.collection("tutos");
+    let tags: Collection<Tag> = db.collection("tags");
+
+    let mut resultats: Vec<Resultat> = Vec::new(); // Vec qui contiendra nos résultats de recherche
+
+    let tags_result = tags.find(query).run();
+    match tags_result {
+        Ok(tags) => {
+            //
+            for tag in tags {
+                match tag {
+                    Ok(tag) => {
+                        //
+                        println!("tag trouvé: {:?}", tag);
+                        //
+                        let tuto_result =
+                            tutos.find_one(doc! {"id": {"$eq":tag.tuto_id} }).unwrap();
+                        match tuto_result {
+                            Some(tuto) => {
+                                //
+                                println!("==> tuto trouvé pour le tag ci-dessus: {:?}", tuto);
+                                //
+                                let index =
+                                    resultats[0..].iter().position(|x| x.tuto_id == tuto.id);
+
+                                if let None = index {
+                                    let res = Resultat {
+                                        score: 1,
+                                        max_score,
+                                        tuto_id: tuto.id,
+                                        tags: vec![tag.value],
+                                        title: tuto.title,
+                                        content: tuto.content,
+                                    };
+                                    resultats.push(res);
+                                } else if let Some(index) = index {
+                                    resultats[index].score += 1;
+                                    resultats[index].tags.push(tag.value);
+                                }
+                            }
+                            None => {
+                                println!("Aucun tuto n'a été trouvé");
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        println!(
+                            "Erreur survenue lors de la recherche de tags dans la BDD: {:?}",
+                            e
+                        );
+                    }
+                }
+            }
+
+            // classement des résultats par score (nombre de tags trouvés)
+            resultats.sort_by(|a, b| b.score.cmp(&a.score));
+            return resultats;
+        }
+        Err(_) => resultats,
     }
 }
