@@ -1,7 +1,8 @@
 use dotenvy::dotenv;
 use std::env;
 
-use comfy_table::Table;
+// use comfy_table::Table;
+use colored::Colorize;
 use polodb_core::{bson, bson::doc, Collection, CollectionT, Database};
 
 //use inquire::Text;
@@ -19,21 +20,21 @@ fn main() {
 
     let resultats = get_resultat(query, max_score);
 
-    println!("Résultats trouvés: {:?}", resultats);
+    println!("{} résultats trouvés: \n", resultats.len());
 
     for resultat in resultats {
-        let mut table = Table::new();
+        // 
         let score = &resultat.score;
         let total = &resultat.max_score;
         let tags = resultat.tags.join(", ");
-        let affichage = format!("Tags ({score}/{total})");
-        table
-            // .set_header(vec![resultat.title])
-            .add_row(vec!["Titre", &resultat.title])
-            .add_row(vec!["Contenu", &resultat.content])
-            .add_row(vec![affichage, tags]);
-
-        println!("{table}");
+        let affichage = format!("{score}/{total} tags trouvés: {tags}");
+        
+        println!(
+            "{}\n{}\n>>> {}\n",
+            affichage,
+            resultat.title.bold(),
+            resultat.content.bold().blue()
+        );
     }
 
     //let tuto = tutos.find_one(doc! {"id":1});
@@ -90,14 +91,10 @@ fn get_resultat(query: bson::Document, max_score: usize) -> Vec<Resultat> {
                 match tag {
                     Ok(tag) => {
                         //
-                        println!("tag trouvé: {:?}", tag);
-                        //
                         let tuto_result =
                             tutos.find_one(doc! {"id": {"$eq":tag.tuto_id} }).unwrap();
                         match tuto_result {
                             Some(tuto) => {
-                                //
-                                println!("==> tuto trouvé pour le tag ci-dessus: {:?}", tuto);
                                 //
                                 let index =
                                     resultats[0..].iter().position(|x| x.tuto_id == tuto.id);
@@ -118,7 +115,7 @@ fn get_resultat(query: bson::Document, max_score: usize) -> Vec<Resultat> {
                                 }
                             }
                             None => {
-                                println!("Aucun tuto n'a été trouvé");
+                                println!("Aucun résultat n'a pu etre trouvé");
                             }
                         }
                     }
