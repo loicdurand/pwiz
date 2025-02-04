@@ -1,7 +1,7 @@
 use dotenvy::dotenv;
 use std::env;
 
-use polodb_core::{bson::doc, Collection, CollectionT, Database};
+use polodb_core::{bson, bson::doc, Collection, CollectionT, Database};
 
 //use inquire::Text;
 use model::fixtures;
@@ -10,27 +10,20 @@ use model::Tag;
 use model::Tuto;
 
 fn main() {
-    let db = establish_connection();
+    let db: Database = establish_connection();
     let tutos: Collection<Tuto> = db.collection("tutos");
     let tags: Collection<Tag> = db.collection("tags");
 
     let args: Vec<String> = env::args().collect();
     let args = &args[1..];
     let max_score: usize = args.len();
-    let mut resultats: Vec<Resultat> = Vec::new();
-    let criterias = args
-        .into_iter()
-        .map(|term| doc! {"value":term })
-        .collect::<Vec<_>>();
-    let search = doc! {
-        "$or":criterias
-    };
+    let mut resultats: Vec<Resultat> = Vec::new(); // Vec qui contiendra nos résultats de recherche
 
-    let tags_result = tags.find(search).run();
+    let query = prepare_query_from(args);
+
+    let tags_result = tags.find(query).run();
     match tags_result {
         Ok(tags) => {
-            //
-            // création du Vec qui contiendra nos résultats de recherche
             //
             for tag in tags {
                 match tag {
@@ -58,7 +51,7 @@ fn main() {
                                     };
                                     resultats.push(res);
                                 } else if let Some(index) = index {
-                                    resultats[index].up_score();
+                                    resultats[index].score += 1;
                                     resultats[index].tags.push(tag.value);
                                 }
                             }
@@ -75,10 +68,7 @@ fn main() {
             // classement des résultats par score (nombre de tags trouvés)
             resultats.sort_by(|a, b| b.score.cmp(&a.score));
             //
-            println!(
-                "Résultats trouvés: {:?}",
-                resultats
-            );
+            println!("Résultats trouvés: {:?}", resultats);
         }
         Err(_) => (),
     }
@@ -109,4 +99,14 @@ pub fn establish_connection() -> Database {
     let db = Database::open_path(&db_path).unwrap();
 
     return db;
+}
+
+fn prepare_query_from(args: &[String]) -> bson::Document {
+    let criterias = args
+        .into_iter()
+        .map(|term| doc! {"value":term })
+        .collect::<Vec<_>>();
+    doc! {
+        "$or": criterias
+    }
 }
