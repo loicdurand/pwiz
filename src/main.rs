@@ -31,7 +31,11 @@ fn rechercher_tutos(args: &[String]) -> () {
 
     for resultat in resultats {
         //
-        let score = if args_length == 0 { 0 } else { resultat.score.into() };
+        let score: i8 = if args_length > 0 {
+            resultat.score.into()
+        } else {
+            0
+        };
         let tags = resultat.tags.join(", ");
         let affichage = format!("{score}/{args_length} tags trouvés: {tags}");
 

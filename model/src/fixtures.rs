@@ -31,7 +31,7 @@ pub fn up() {
             },
             Tuto {
                 id: 2,
-                title: String::from("Formater un disque (clé USB par exemple en FAT32"),
+                title: String::from("Formater un disque (clé USB par exemple) en FAT32"),
                 content: String::from("sudo mkfs.vfat /dev/sdXX"),
             },
         ])
