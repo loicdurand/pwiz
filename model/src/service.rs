@@ -74,9 +74,7 @@ pub mod service {
                                         resultats[index].tags.push(tag.value);
                                     }
                                 }
-                                None => {
-                                    println!("Aucun résultat n'a pu etre trouvé");
-                                }
+                                None => println!("Aucun résultat n'a pu etre trouvé"),
                             }
                         }
                         Err(e) => {
