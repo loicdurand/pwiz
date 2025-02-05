@@ -31,7 +31,7 @@ fn rechercher_tutos(args: &[String]) -> () {
 
     for resultat in resultats {
         //
-        let score = &resultat.score;
+        let score = if args_length == 0 { 0 } else { resultat.score.into() };
         let tags = resultat.tags.join(", ");
         let affichage = format!("{score}/{args_length} tags trouvés: {tags}");
 
@@ -58,12 +58,17 @@ fn lancer_menu() -> () {
 
     match commande {
         Ok(commande) => {
-            let commandes: Vec<&dyn Fn(&[String])->()> = vec![&rechercher_tutos];
+            let commandes: Vec<&dyn Fn(&[String]) -> ()> = vec![
+                &rechercher_tutos,
+                &rechercher_tutos,
+                &rechercher_tutos,
+                &rechercher_tutos,
+            ];
             let cmd_index: usize = commande.parse::<usize>().expect(
                 "Veuillez entrer un chiffre correspondant à l'action que vous souhaitez exécuter.",
             );
             match cmd_index {
-                0 => commandes[cmd_index](&[]),
+                0..4 => commandes[cmd_index](&[]),
                 _ => process::exit(1),
             }
         }
