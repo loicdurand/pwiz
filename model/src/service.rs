@@ -37,7 +37,7 @@ pub mod service {
         }
     }
 
-    pub fn get_resultat(query: bson::Document) -> Vec<Resultat> {
+    pub fn get_resultats(query: bson::Document) -> Vec<Resultat> {
         let db: Database = establish_connection();
         let tutos: Collection<Tuto> = db.collection("tutos");
         let tags: Collection<Tag> = db.collection("tags");
