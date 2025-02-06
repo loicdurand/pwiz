@@ -48,6 +48,16 @@ fn rechercher_tutos(args: &[String]) -> () {
     }
 }
 
+fn rechercher_tutos_avec_formulaire(_: &[String]) -> () {
+    match Text::new("Saisissez les tags à rechercher:").prompt(){
+            Ok(tags) => {
+                let tags: Vec<String> = tags.split(' ').map(String::from).collect();
+                rechercher_tutos(&tags)
+            },
+            Err(_)=> lancer_menu(),
+    };
+}
+
 fn lancer_menu() -> () {
     let mut table = Table::new();
     table
@@ -64,7 +74,7 @@ fn lancer_menu() -> () {
         Ok(commande) => {
             let commandes: Vec<&dyn Fn(&[String]) -> ()> = vec![
                 &rechercher_tutos,
-                &rechercher_tutos,
+                &rechercher_tutos_avec_formulaire,
                 &rechercher_tutos,
                 &rechercher_tutos,
             ];
