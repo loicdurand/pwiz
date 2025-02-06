@@ -5,6 +5,8 @@ pub mod service {
     use std::env;
 
     use crate::fixtures;
+    use crate::get_id;
+    use crate::Recap;
     use crate::Resultat;
     use crate::Tag;
     use crate::Tuto;
@@ -52,8 +54,9 @@ pub mod service {
                     match tag {
                         Ok(tag) => {
                             //
-                            let tuto_result =
-                                tutos.find_one(doc! {"id": {"$eq":tag.tuto_id} }).unwrap();
+                            let tuto_result = tutos
+                                .find_one(doc! {"id": {"$eq": tag.tuto_id as i32} })
+                                .unwrap();
                             match tuto_result {
                                 Some(tuto) => {
                                     //
@@ -91,6 +94,37 @@ pub mod service {
                 return resultats;
             }
             Err(_) => resultats,
+        }
+    }
+
+    pub fn insert_tuto(recap: Recap) -> bool {
+        let db: Database = establish_connection();
+        let tutos: Collection<Tuto> = db.collection("tutos");
+        let tags: Collection<Tag> = db.collection("tags");
+        let id = get_id();
+        println!(">>> id: {}", id);
+
+        if let Ok(_) = tutos.insert_one(Tuto {
+            id,
+            title: recap.title,
+            content: recap.content,
+        }) {
+            let docs = recap
+                .tags
+                .into_iter()
+                .map(|term| Tag {
+                    tuto_id: id,
+                    value: term,
+                })
+                .collect::<Vec<_>>();
+
+            if let Ok(_) = tags.insert_many(docs) {
+                true
+            } else {
+                false
+            }
+        } else {
+            false
         }
     }
 }
