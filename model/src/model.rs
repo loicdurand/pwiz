@@ -1,11 +1,10 @@
 pub mod model {
 
     use serde::{Deserialize, Serialize};
-    use std::sync::atomic::{AtomicUsize, Ordering};
 
-    pub fn get_id() -> usize {
-        static COUNTER: AtomicUsize = AtomicUsize::new(1);
-        COUNTER.fetch_add(1, Ordering::Relaxed)
+    #[derive(Debug, Serialize, Deserialize)]
+    pub struct Id {
+        pub value: usize,
     }
 
     #[derive(Debug, Serialize, Deserialize)]

@@ -5,7 +5,7 @@ use std::env;
 
 use polodb_core::{bson::doc, Collection, CollectionT, Database};
 
-use crate::model::model::{Tag,Tuto,get_id};
+use crate::model::model::{Id, Tag,Tuto};
 
 pub fn up() {
     dotenv().ok(); //charge les variables présente dans le .env dans l'environnement
@@ -14,14 +14,16 @@ pub fn up() {
         .expect("DB_PATH doit etre précisé dans .env"); //si elle n'existe pas on lève une erreur
 
     let db = Database::open_path(&db_path).unwrap();
+    db.create_collection("id").unwrap();
     db.create_collection("tutos").unwrap();
     db.create_collection("tags").unwrap();
 
+    let id = db.collection("id");
     let tutos = db.collection("tutos");
     let tags: Collection<Tag> = db.collection("tags");
 
-    let id1 = get_id();
-    let id2 = get_id();
+    let id1 = 1;
+    let id2 = 2;
 
     tutos
         .insert_many([
@@ -60,14 +62,10 @@ pub fn up() {
     println!("Tuto inséré: {:?}", tuto1);
     println!("Tuto inséré: {:?}", tuto2);
 
+    id.insert_one(Id{
+        value:2
+    }).unwrap();
+
     process::exit(1);
 
-    // let tuto_tags = tags
-    //     .find(doc! {
-    //       "tuto_id": tuto.id
-    //     })
-    //     .run();
-    // for &tag in tuto_tags.iter() {
-    //     println!("{:#?}", &tag);
-    // }
 }

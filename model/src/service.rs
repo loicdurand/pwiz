@@ -5,11 +5,9 @@ pub mod service {
     use std::env;
 
     use crate::fixtures;
-    use crate::get_id;
     use crate::Recap;
     use crate::Resultat;
-    use crate::Tag;
-    use crate::Tuto;
+    use crate::{Id, Tag, Tuto};
 
     fn establish_connection() -> Database {
         dotenv().ok(); //charge les variables présente dans le .env dans l'environnement
@@ -99,32 +97,40 @@ pub mod service {
 
     pub fn insert_tuto(recap: Recap) -> bool {
         let db: Database = establish_connection();
+        let ids: Collection<Id> = db.collection("id");
         let tutos: Collection<Tuto> = db.collection("tutos");
         let tags: Collection<Tag> = db.collection("tags");
-        let id = get_id();
-        println!(">>> id: {}", id);
 
-        if let Ok(_) = tutos.insert_one(Tuto {
-            id,
-            title: recap.title,
-            content: recap.content,
-        }) {
-            let docs = recap
-                .tags
-                .into_iter()
-                .map(|term| Tag {
-                    tuto_id: id,
-                    value: term,
-                })
-                .collect::<Vec<_>>();
+        let id = ids.find_one(doc! {}).unwrap();
+        match id {
+            Some(id) => {
 
-            if let Ok(_) = tags.insert_many(docs) {
-                true
-            } else {
-                false
-            }
-        } else {
-            false
+                let id = id.value + 1;
+                
+                if let Ok(_) = tutos.insert_one(Tuto {
+                    id,
+                    title: recap.title,
+                    content: recap.content,
+                }) {
+                    let docs = recap
+                        .tags
+                        .into_iter()
+                        .map(|term| Tag {
+                            tuto_id: id,
+                            value: term,
+                        })
+                        .collect::<Vec<_>>();
+
+                    if let Ok(_) = tags.insert_many(docs) {
+                        true
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+            },
+            None => false
         }
     }
 }
