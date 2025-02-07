@@ -75,6 +75,26 @@ fn creer_tuto(_: &[String]) -> () {
     };
 }
 
+fn modifier_tuto(_: &[String]) -> () {
+    if let Ok(title) = Text::new("Quel sera le titre de votre tutoriel?").prompt() {
+        if let Ok(content) = Text::new("Quel sera le contenu de votre tutoriel?").prompt() {
+            if let Ok(tags) =
+                Text::new("Indiquez les tags permettant de rechercher ce tutoriel:").prompt()
+            {
+                let tags: Vec<String> = tags.trim().split_whitespace().map(String::from).collect();
+                let recap = Recap {
+                    title,
+                    content,
+                    tags,
+                };
+                afficher_recap_table(recap);
+            }
+        }
+    } else {
+        lancer_menu();
+    };
+}
+
 fn afficher_recap_table(recap: Recap) -> () {
     let mut table = Table::new();
     table
@@ -109,24 +129,27 @@ fn lancer_menu() -> () {
         .set_header(vec!["Choix", "Action"])
         .add_row(vec!["0", "Afficher tous les tutoriels"])
         .add_row(vec!["1", "Rechercher des tutoriels"])
-        .add_row(vec!["2", "Créer un tutoriel"]);
+        .add_row(vec!["2", "Créer un tutoriel"])
+        .add_row(vec!["3", "Modifier / Supprimer un tutoriel"]);
 
     println!("Aucun argument passé, lancement du menu:\n{table}");
 
-    let num = Text::new("Que souhaitez-vous faire? [0, 1, 2]")
+    let num = Text::new("Que souhaitez-vous faire? [0, 1, 2, 3]")
         .prompt()
         .expect("Vous devez saisir un chiffre!");
     let cmd_index: usize = num
         .parse::<usize>()
         .expect("Veuillez entrer un chiffre correspondant à l'action que vous souhaitez exécuter.");
+
     let actions: Vec<&dyn Fn(&[String]) -> ()> = vec![
         &afficher_tutos_lignes, // affiche tous les tutos
         &afficher_tutos_invit,  // invite à saisir les tags à rechercher
         &creer_tuto,
+        &modifier_tuto,
     ];
 
     match cmd_index {
-        0..3 => actions[cmd_index](&[]),
+        0..4 => actions[cmd_index](&[]),
         _ => process::exit(1),
     }
 }
