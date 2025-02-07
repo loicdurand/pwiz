@@ -1,8 +1,9 @@
 pub mod service {
 
     use dotenvy::dotenv;
+    use polodb_core::bson::Bson;
     use polodb_core::{bson, bson::doc, Collection, CollectionT, Database};
-    use std::env;
+    use std::{env, process};
 
     use crate::fixtures;
     use crate::Recap;
@@ -95,6 +96,23 @@ pub mod service {
         }
     }
 
+    pub fn get_tuto(tuto_id: i32) -> Tuto {
+        let db: Database = establish_connection();
+        let tutos: Collection<Tuto> = db.collection("tutos");
+        let tuto = tutos
+            .find_one(doc! {
+            "id": Bson::from(tuto_id) })
+            .unwrap();
+
+        match tuto {
+            Some(tuto) => tuto,
+            None => {
+                println!("Aucun tuto trouvé");
+                process::exit(1);
+            }
+        }
+    }
+
     pub fn insert_tuto(recap: Recap) -> bool {
         let db: Database = establish_connection();
         let ids: Collection<Id> = db.collection("id");
@@ -104,9 +122,8 @@ pub mod service {
         let id = ids.find_one(doc! {}).unwrap();
         match id {
             Some(id) => {
-
                 let id = id.value + 1;
-                
+
                 if let Ok(_) = tutos.insert_one(Tuto {
                     id,
                     title: recap.title,
@@ -129,8 +146,8 @@ pub mod service {
                 } else {
                     false
                 }
-            },
-            None => false
+            }
+            None => false,
         }
     }
 }

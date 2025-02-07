@@ -5,7 +5,7 @@ use std::env;
 
 use polodb_core::{bson::doc, Collection, CollectionT, Database};
 
-use crate::model::model::{Id, Tag,Tuto};
+use crate::model::model::{Id, Tag, Tuto};
 
 pub fn up() {
     dotenv().ok(); //charge les variables présente dans le .env dans l'environnement
@@ -62,10 +62,7 @@ pub fn up() {
     println!("Tuto inséré: {:?}", tuto1);
     println!("Tuto inséré: {:?}", tuto2);
 
-    id.insert_one(Id{
-        value:2
-    }).unwrap();
+    id.insert_one(Id { value: 2 }).unwrap();
 
     process::exit(1);
-
 }

@@ -2,8 +2,9 @@ use inquire::Text;
 use std::{env, process};
 
 use colored::Colorize;
+use comfy_table::presets::UTF8_FULL;
 use comfy_table::*;
-use model::{get_resultats, insert_tuto, prepare_query_from, Recap};
+use model::{get_resultats, get_tuto, insert_tuto, prepare_query_from, Recap};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -45,6 +46,32 @@ fn afficher_tutos_lignes(args: &[String]) -> () {
     }
 }
 
+fn afficher_tutos_table() -> Vec<i32> {
+    let query = prepare_query_from(&[]);
+    let resultats = get_resultats(query);
+    let mut indexes = Vec::new();
+    let mut table = Table::new();
+    table.load_preset(UTF8_FULL).set_header(vec![
+        Cell::new("Index").set_alignment(CellAlignment::Center),
+        Cell::new("Contenu").set_alignment(CellAlignment::Center),
+    ]);
+    for resultat in resultats {
+        indexes.push(resultat.tuto_id);
+        table.add_row(vec![
+            Cell::new(&resultat.tuto_id),
+            Cell::new(format!(
+                "Titre: {}\nContenu: {}\nTags: {}",
+                &resultat.title.bold(),
+                &resultat.content.bold().blue(),
+                &resultat.tags.join(", ")
+            )),
+        ]);
+    }
+    println!("{}\n", table);
+
+    indexes
+}
+
 fn afficher_tutos_invit(_: &[String]) -> () {
     if let Ok(tags) = Text::new("Saisissez les tags à rechercher:").prompt() {
         let tags: Vec<String> = tags.trim().split_whitespace().map(String::from).collect();
@@ -76,23 +103,31 @@ fn creer_tuto(_: &[String]) -> () {
 }
 
 fn modifier_tuto(_: &[String]) -> () {
-    if let Ok(title) = Text::new("Quel sera le titre de votre tutoriel?").prompt() {
-        if let Ok(content) = Text::new("Quel sera le contenu de votre tutoriel?").prompt() {
-            if let Ok(tags) =
-                Text::new("Indiquez les tags permettant de rechercher ce tutoriel:").prompt()
-            {
-                let tags: Vec<String> = tags.trim().split_whitespace().map(String::from).collect();
-                let recap = Recap {
-                    title,
-                    content,
-                    tags,
-                };
-                afficher_recap_table(recap);
-            }
-        }
-    } else {
-        lancer_menu();
-    };
+    let indexes: Vec<i32> = afficher_tutos_table();
+    let id: i32 = Text::new(&format!(
+        "Saisissez l'index sur lequel vous souhaitez agir: [{}]",
+        indexes
+            .into_iter()
+            .map(|index| index.to_string())
+            .collect::<Vec<_>>()
+            .join(",")
+    ))
+    .prompt()
+    .expect("Vous devez saisir un chiffre!")
+    .parse::<i32>()
+    .expect("Veuillez entrer un chiffre correspondant à l'action que vous souhaitez exécuter.");
+    //println!("nombre saisi: {}", id);
+    let tuto = get_tuto(id);
+    let mut title = Text::new(&format!(
+        "Saisissez le nouveau titre de ce tutoriel [{}]",
+        &tuto.title
+    ))
+    .prompt()
+    .expect("Titre non valable");
+    if title == "" {
+        title = tuto.title;
+    }
+    println!("Nouveau titre: {}", title);
 }
 
 fn afficher_recap_table(recap: Recap) -> () {
@@ -136,8 +171,7 @@ fn lancer_menu() -> () {
 
     let num = Text::new("Que souhaitez-vous faire? [0, 1, 2, 3]")
         .prompt()
-        .expect("Vous devez saisir un chiffre!");
-    let cmd_index: usize = num
+        .expect("Vous devez saisir un chiffre!")
         .parse::<usize>()
         .expect("Veuillez entrer un chiffre correspondant à l'action que vous souhaitez exécuter.");
 
@@ -148,8 +182,8 @@ fn lancer_menu() -> () {
         &modifier_tuto,
     ];
 
-    match cmd_index {
-        0..4 => actions[cmd_index](&[]),
+    match num {
+        0..4 => actions[num](&[]),
         _ => process::exit(1),
     }
 }
