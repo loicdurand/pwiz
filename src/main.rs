@@ -48,13 +48,14 @@ fn afficher_tutos_lignes(args: &[String]) -> () {
 
 fn afficher_tutos_table() -> Vec<i32> {
     let query = prepare_query_from(&[]);
-    let resultats = get_resultats(query);
+    let mut resultats = get_resultats(query);
     let mut indexes = Vec::new();
     let mut table = Table::new();
     table.load_preset(UTF8_FULL).set_header(vec![
         Cell::new("Index").set_alignment(CellAlignment::Center),
         Cell::new("Contenu").set_alignment(CellAlignment::Center),
     ]);
+    resultats.sort_by(|a, b| a.tuto_id.cmp(&b.tuto_id));
     for resultat in resultats {
         indexes.push(resultat.tuto_id);
         table.add_row(vec![
