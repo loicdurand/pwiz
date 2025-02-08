@@ -1,7 +1,6 @@
 pub mod service {
 
     use dotenvy::dotenv;
-    use polodb_core::bson::Bson;
     use polodb_core::{bson, bson::doc, Collection, CollectionT, Database};
     use std::{env, process};
 
@@ -96,16 +95,43 @@ pub mod service {
         }
     }
 
-    pub fn get_tuto(tuto_id: i32) -> Tuto {
+    pub fn get_tuto(tuto_id: i32) -> Recap {
         let db: Database = establish_connection();
         let tutos: Collection<Tuto> = db.collection("tutos");
+        let tags: Collection<Tag> = db.collection("tags");
+
         let tuto = tutos
             .find_one(doc! {
-            "id": Bson::from(tuto_id) })
+            "id": tuto_id as i32 })
             .unwrap();
 
         match tuto {
-            Some(tuto) => tuto,
+            Some(tuto) => {
+                let mut recap = Recap {
+                    title: tuto.title,
+                    content: tuto.content,
+                    tags: Vec::new(),
+                };
+                let tags = tags
+                    .find(doc! {
+                    "tuto_id": tuto_id as i32 })
+                    .run();
+                match tags {
+                    Ok(tags) => {
+                        for tag in tags {
+                            if let Ok(tag) = tag {
+                                recap.tags.push(tag.value);
+                            } else {
+                                continue;
+                            }
+                        }
+                    }
+                    Err(_) => println!(
+                        "Une erreur est survenue lors de la récupération des tags de ce tutoriel"
+                    ),
+                }
+                recap
+            }
             None => {
                 println!("Aucun tuto trouvé");
                 process::exit(1);
@@ -149,5 +175,42 @@ pub mod service {
             }
             None => false,
         }
+    }
+
+    pub fn update_tuto(id: i32, recap: &Recap) -> () {
+        let db: Database = establish_connection();
+        let tutos: Collection<Tuto> = db.collection("tutos");
+        let tags: Collection<Tag> = db.collection("tags");
+
+        tags.delete_many(doc! {"tuto_id":{"$eq":id}}).unwrap();
+        //
+        let updated = tutos.update_one(
+            doc! {
+                "id":id.to_owned() as i32
+            },
+            doc! {
+                "$set":{
+                    "title":&recap.title,
+                    "content":&recap.content
+                }
+            },
+        );
+        match updated {
+            Ok(_) => println!("Tutoriel ayant pour index [{}] mis à jour.", id),
+            Err(e) => println!("Erreur: {}", e),
+        }
+
+        tags.insert_many(
+            recap
+                .tags
+                .iter()
+                .filter(|term| term.to_string().cmp(&"".to_string()).is_ne())
+                .map(|term| Tag {
+                    tuto_id: id,
+                    value: term.clone(),
+                })
+                .collect::<Vec<_>>(),
+        )
+        .unwrap();
     }
 }

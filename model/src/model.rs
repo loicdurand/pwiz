@@ -35,4 +35,15 @@ pub mod model {
         pub content: String,
         pub tags: Vec<String>, // tags trouvés parmi les arguments
     }
+
+    impl Recap {
+        pub fn new(tuto:Tuto)->Recap{
+            Recap{
+                title:tuto.title,
+                content:tuto.content,
+                tags:Vec::new()
+            }
+        }
+        
+    }
 }

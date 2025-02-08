@@ -4,7 +4,7 @@ use std::{env, process};
 use colored::Colorize;
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::*;
-use model::{get_resultats, get_tuto, insert_tuto, prepare_query_from, Recap};
+use model::{get_resultats, get_tuto, insert_tuto, prepare_query_from, update_tuto, Recap};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -117,17 +117,64 @@ fn modifier_tuto(_: &[String]) -> () {
     .parse::<i32>()
     .expect("Veuillez entrer un chiffre correspondant à l'action que vous souhaitez exécuter.");
     //println!("nombre saisi: {}", id);
-    let tuto = get_tuto(id);
+    let recap = get_tuto(id);
     let mut title = Text::new(&format!(
         "Saisissez le nouveau titre de ce tutoriel [{}]",
-        &tuto.title
+        &recap.title
     ))
     .prompt()
     .expect("Titre non valable");
     if title == "" {
-        title = tuto.title;
+        title = recap.title;
+    }
+    //
+    let mut content = Text::new(&format!("Saisissez son contenu: [{}]", &recap.content))
+        .prompt()
+        .expect("Contenu non valable");
+    if content == "" {
+        content = recap.content;
     }
     println!("Nouveau titre: {}", title);
+    let mut mod_recap = Recap::new(model::Tuto { id, title, content });
+
+    for recap_tag in recap.tags {
+        let tag = Text::new(&format!(
+            "Modifier ce tag? [{}]\nNota: pour le supprimer, indiquez {}",
+            &recap_tag,
+            String::from('-').bold().red()
+        ))
+        .prompt()
+        .expect("Contenu non valable");
+        if tag == "" {
+            println!("Tag inchangé");
+            mod_recap.tags.push(recap_tag);
+        } else if tag != "-" {
+            println!("Tag modifié: {}", tag);
+            mod_recap.tags.push(tag);
+        } else {
+            println!("Tag supprimé");
+        }
+    }
+
+    loop {
+        let tag = Text::new("Ajouter un tag supplémentaire? Nota: laisser vide pour terminer")
+            .prompt()
+            .expect("Contenu non valable");
+        if tag == "" {
+            println!("Terminé");
+            break;
+        } else {
+            mod_recap.tags.push(tag);
+        }
+    }
+
+    update_tuto(id, &mod_recap);
+    println!(
+        "Titre: {}\nContenu: {}\nTags: {}",
+        &mod_recap.title.bold(),
+        &mod_recap.content.bold().blue(),
+        &mod_recap.tags.join(", ")
+    );
 }
 
 fn afficher_recap_table(recap: Recap) -> () {
