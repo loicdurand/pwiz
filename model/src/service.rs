@@ -2,12 +2,12 @@ pub mod service {
 
     use dotenvy::dotenv;
     use polodb_core::{bson, bson::doc, Collection, CollectionT, Database};
-    use std::env;
+    use std::{env, process};
 
     use crate::fixtures;
+    use crate::Recap;
     use crate::Resultat;
-    use crate::Tag;
-    use crate::Tuto;
+    use crate::{Id, Tag, Tuto};
 
     fn establish_connection() -> Database {
         dotenv().ok(); //charge les variables présente dans le .env dans l'environnement
@@ -37,7 +37,7 @@ pub mod service {
         }
     }
 
-    pub fn get_resultat(query: bson::Document) -> Vec<Resultat> {
+    pub fn get_resultats(query: bson::Document) -> Vec<Resultat> {
         let db: Database = establish_connection();
         let tutos: Collection<Tuto> = db.collection("tutos");
         let tags: Collection<Tag> = db.collection("tags");
@@ -52,8 +52,9 @@ pub mod service {
                     match tag {
                         Ok(tag) => {
                             //
-                            let tuto_result =
-                                tutos.find_one(doc! {"id": {"$eq":tag.tuto_id} }).unwrap();
+                            let tuto_result = tutos
+                                .find_one(doc! {"id": {"$eq": tag.tuto_id as i32} })
+                                .unwrap();
                             match tuto_result {
                                 Some(tuto) => {
                                     //
@@ -74,9 +75,7 @@ pub mod service {
                                         resultats[index].tags.push(tag.value);
                                     }
                                 }
-                                None => {
-                                    println!("Aucun résultat n'a pu etre trouvé");
-                                }
+                                None => println!("Aucun résultat n'a pu etre trouvé"),
                             }
                         }
                         Err(e) => {
@@ -94,5 +93,124 @@ pub mod service {
             }
             Err(_) => resultats,
         }
+    }
+
+    pub fn get_tuto(tuto_id: i32) -> Recap {
+        let db: Database = establish_connection();
+        let tutos: Collection<Tuto> = db.collection("tutos");
+        let tags: Collection<Tag> = db.collection("tags");
+
+        let tuto = tutos
+            .find_one(doc! {
+            "id": tuto_id as i32 })
+            .unwrap();
+
+        match tuto {
+            Some(tuto) => {
+                let mut recap = Recap {
+                    title: tuto.title,
+                    content: tuto.content,
+                    tags: Vec::new(),
+                };
+                let tags = tags
+                    .find(doc! {
+                    "tuto_id": tuto_id as i32 })
+                    .run();
+                match tags {
+                    Ok(tags) => {
+                        for tag in tags {
+                            if let Ok(tag) = tag {
+                                recap.tags.push(tag.value);
+                            } else {
+                                continue;
+                            }
+                        }
+                    }
+                    Err(_) => println!(
+                        "Une erreur est survenue lors de la récupération des tags de ce tutoriel"
+                    ),
+                }
+                recap
+            }
+            None => {
+                println!("Aucun tuto trouvé");
+                process::exit(1);
+            }
+        }
+    }
+
+    pub fn insert_tuto(recap: Recap) -> bool {
+        let db: Database = establish_connection();
+        let ids: Collection<Id> = db.collection("id");
+        let tutos: Collection<Tuto> = db.collection("tutos");
+        let tags: Collection<Tag> = db.collection("tags");
+
+        let id = ids.find_one(doc! {}).unwrap();
+        match id {
+            Some(id) => {
+                let id = id.value + 1;
+
+                if let Ok(_) = tutos.insert_one(Tuto {
+                    id,
+                    title: recap.title,
+                    content: recap.content,
+                }) {
+                    let docs = recap
+                        .tags
+                        .into_iter()
+                        .map(|term| Tag {
+                            tuto_id: id,
+                            value: term,
+                        })
+                        .collect::<Vec<_>>();
+
+                    if let Ok(_) = tags.insert_many(docs) {
+                        true
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+            }
+            None => false,
+        }
+    }
+
+    pub fn update_tuto(id: i32, recap: &Recap) -> () {
+        let db: Database = establish_connection();
+        let tutos: Collection<Tuto> = db.collection("tutos");
+        let tags: Collection<Tag> = db.collection("tags");
+
+        tags.delete_many(doc! {"tuto_id":{"$eq":id}}).unwrap();
+        //
+        let updated = tutos.update_one(
+            doc! {
+                "id":id.to_owned() as i32
+            },
+            doc! {
+                "$set":{
+                    "title":&recap.title,
+                    "content":&recap.content
+                }
+            },
+        );
+        match updated {
+            Ok(_) => println!("Tutoriel ayant pour index [{}] mis à jour.", id),
+            Err(e) => println!("Erreur: {}", e),
+        }
+
+        tags.insert_many(
+            recap
+                .tags
+                .iter()
+                .filter(|term| term.to_string().cmp(&"".to_string()).is_ne())
+                .map(|term| Tag {
+                    tuto_id: id,
+                    value: term.clone(),
+                })
+                .collect::<Vec<_>>(),
+        )
+        .unwrap();
     }
 }
