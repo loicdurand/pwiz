@@ -1,8 +1,8 @@
 pub mod service {
 
-    use dotenvy::dotenv;
+    // use dotenvy::dotenv;
     use polodb_core::{bson, bson::doc, Collection, CollectionT, Database};
-    use std::{env, process};
+    use std::process;
 
     use crate::fixtures;
     use crate::Recap;
@@ -10,16 +10,15 @@ pub mod service {
     use crate::{Id, Tag, Tuto};
 
     fn establish_connection() -> Database {
-        dotenv().ok(); //charge les variables présente dans le .env dans l'environnement
+        // dotenv().ok(); //charge les variables présente dans le .env dans l'environnement
 
-        let db_path = env::var("DB_PATH") //on tente de récuperer le chemin de la BDD depuis l'environnement
-            .expect("DB_PATH doit etre précisé dans .env"); //si elle n'existe pas on lève une erreur
-        let load_fixtures = env::var("LOAD_FIXTURES") //on vérifie s'il faut lancer les fixtures
-            .expect("LOAD_FIXTURES doit etre précisé dans .env"); //si elle n'existe pas on lève une erreur
+        let db_path = "./pwiz.db"; // chemin de la BDD
+        let load_fixtures = "0"; //si elle n'existe pas on lève une erreur
 
         if load_fixtures.parse::<i8>().unwrap() == 1 {
             // Attention! Le programme quittera après exécution des fixtures: -> remettre LOAD_FIXTURES=0
             fixtures::up();
+            process::exit(1);
         }
 
         let db = Database::open_path(&db_path).unwrap();
@@ -139,41 +138,51 @@ pub mod service {
         }
     }
 
-    pub fn insert_tuto(recap: Recap) -> bool {
+    pub fn insert_tuto(recap: Recap) -> i32 {
         let db: Database = establish_connection();
         let ids: Collection<Id> = db.collection("id");
         let tutos: Collection<Tuto> = db.collection("tutos");
         let tags: Collection<Tag> = db.collection("tags");
 
         let id = ids.find_one(doc! {}).unwrap();
+        let tuto_id: i32;
         match id {
             Some(id) => {
-                let id = id.value + 1;
-
-                if let Ok(_) = tutos.insert_one(Tuto {
-                    id,
-                    title: recap.title,
-                    content: recap.content,
-                }) {
-                    let docs = recap
-                        .tags
-                        .into_iter()
-                        .map(|term| Tag {
-                            tuto_id: id,
-                            value: term,
-                        })
-                        .collect::<Vec<_>>();
-
-                    if let Ok(_) = tags.insert_many(docs) {
-                        true
-                    } else {
-                        false
+                tuto_id = &id.value + 1;
+                ids.update_one(doc!{"value":&id.value}, doc! {
+                    "$set":{
+                        "value":&tuto_id,
                     }
-                } else {
-                    false
-                }
+                })
+                    .unwrap();
             }
-            None => false,
+            None => {
+                tuto_id = 1;
+                ids.insert_one(Id { value: tuto_id }).unwrap();
+            }
+        }
+
+        if let Ok(_) = tutos.insert_one(Tuto {
+            id: tuto_id,
+            title: recap.title,
+            content: recap.content,
+        }) {
+            let docs = recap
+                .tags
+                .into_iter()
+                .map(|term| Tag {
+                    tuto_id,
+                    value: term,
+                })
+                .collect::<Vec<_>>();
+
+            if let Ok(_) = tags.insert_many(docs) {
+                tuto_id
+            } else {
+                0
+            }
+        } else {
+            0
         }
     }
 
@@ -196,7 +205,7 @@ pub mod service {
             },
         );
         match updated {
-            Ok(_) => println!("Tutoriel ayant pour index [{}] mis à jour.", id),
+            Ok(_) => println!("\nTutoriel ayant pour index [{}] mis à jour:", id),
             Err(e) => println!("Erreur: {}", e),
         }
 
@@ -212,5 +221,15 @@ pub mod service {
                 .collect::<Vec<_>>(),
         )
         .unwrap();
+    }
+
+    pub fn delete_tuto(id:i32){
+        let db: Database = establish_connection();
+        let tutos: Collection<Tuto> = db.collection("tutos");
+        let tags: Collection<Tag> = db.collection("tags");
+
+        tags.delete_many(doc! {"tuto_id":{"$eq":id}}).unwrap();
+        tutos.delete_one(doc! {"id":{"$eq":id}}).unwrap();
+        
     }
 }

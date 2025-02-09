@@ -37,13 +37,19 @@ pub mod model {
     }
 
     impl Recap {
-        pub fn new(tuto:Tuto)->Recap{
-            Recap{
-                title:tuto.title,
-                content:tuto.content,
-                tags:Vec::new()
+        pub fn new(tuto: Tuto) -> Recap {
+            Recap {
+                title: tuto.title,
+                content: tuto.content,
+                tags: Vec::new(),
             }
         }
-        
+        pub fn default() -> Recap {
+            Recap {
+                title: String::from(""),
+                content: String::from(""),
+                tags: Vec::new(),
+            }
+        }
     }
 }

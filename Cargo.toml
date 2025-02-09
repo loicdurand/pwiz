@@ -5,6 +5,8 @@ edition = "2021"
 
 [dependencies]
 model = { path = "./model" }
+prompts = { path = "./prompts" }
+
 colored = "3.0.0"
 dotenvy = "0.15.7"
 inquire = "0.7.5"
