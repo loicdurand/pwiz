@@ -16,7 +16,7 @@ pub mod invite {
     }
 
     pub fn demander_infos_tuto() -> Recap {
-        let abort = Recap::default();
+        let abort = Recap::new();
         if let Ok(title) = Text::new("Quel sera le titre de votre tutoriel?").prompt() {
             if let Ok(content) = Text::new("Quel sera le contenu de votre tutoriel?").prompt() {
                 if let Ok(tags) =
@@ -70,7 +70,7 @@ pub mod invite {
         if content == "" {
             content = recap.content;
         }
-        let mut mod_recap = Recap::new(Tuto { id, title, content });
+        let mut mod_recap = Recap::default(Tuto { id, title, content });
 
         for recap_tag in recap.tags {
             let tag = Text::new(&format!(
