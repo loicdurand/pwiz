@@ -5,7 +5,7 @@ pub mod rendu {
     use inquire::Text;
     use model::{Recap, Resultat};
 
-    pub fn afficher_resultat_simple(nb_tags_demandes: usize, resultat: Resultat) -> () {
+    fn ligne_des_tags(nb_tags_demandes: usize, resultat: &Resultat) -> String {
         let score: i8 = if nb_tags_demandes > 0 {
             resultat.score.into()
         } else {
@@ -14,6 +14,21 @@ pub mod rendu {
         let tags = resultat.tags.join(", ");
         let ligne_des_tags = format!("{score}/{nb_tags_demandes} tags trouvés: {tags}");
 
+        ligne_des_tags
+    }
+
+    pub fn afficher_resultat_simple(nb_tags_demandes: usize, resultat: Resultat) -> () {
+        let ligne_des_tags = ligne_des_tags(nb_tags_demandes, &resultat);
+        println!(
+            "{}\n{}\n>>> {}\n",
+            ligne_des_tags,
+            resultat.title.bold(),
+            resultat.content.bold().blue()
+        );
+    }
+
+    pub fn afficher_resultat_script(nb_tags_demandes: usize, resultat: Resultat) -> () {
+        let ligne_des_tags = ligne_des_tags(nb_tags_demandes, &resultat);
         println!(
             "{}\n{}\n>>> {}\n",
             ligne_des_tags,

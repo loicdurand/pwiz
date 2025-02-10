@@ -57,4 +57,9 @@ pub mod model {
             }
         }
     }
+
+    pub struct Script {
+        pub lang: String,
+        pub lines: Vec<String>,
+    }
 }
