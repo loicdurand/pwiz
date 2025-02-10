@@ -40,7 +40,10 @@ fn afficher_tutos(args: &[String]) -> () {
 
     println!("{} résultats trouvés: \n", resultats.len());
     for resultat in resultats {
-        rendu::afficher_resultat(args.len(), resultat);
+        match resultat.content_type.as_str() {
+            // "command" => rendu::afficher_resultat_simple(args.len(), resultat),
+            _ => rendu::afficher_resultat_simple(args.len(), resultat),
+        }
     }
 }
 

@@ -5,7 +5,7 @@ pub mod rendu {
     use inquire::Text;
     use model::{Recap, Resultat};
 
-    pub fn afficher_resultat(nb_tags_demandes: usize, resultat: Resultat) -> () {
+    pub fn afficher_resultat_simple(nb_tags_demandes: usize, resultat: Resultat) -> () {
         let score: i8 = if nb_tags_demandes > 0 {
             resultat.score.into()
         } else {
