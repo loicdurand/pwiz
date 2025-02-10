@@ -22,6 +22,14 @@ pub mod model {
     }
 
     #[derive(Debug, Serialize, Deserialize)]
+    pub struct Script {
+        pub tuto_id: i32,
+        pub name: String,
+        pub lang: String,
+        pub lines: Vec<String>,
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
     pub struct Resultat {
         pub score: i8, // nombre de tags trouvés pour ce tuto
         pub tuto_id: i32,
@@ -58,8 +66,4 @@ pub mod model {
         }
     }
 
-    pub struct Script {
-        pub lang: String,
-        pub lines: Vec<String>,
-    }
 }

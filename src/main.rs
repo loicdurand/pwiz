@@ -1,4 +1,5 @@
 use std::{env, process};
+use users::{get_user_by_uid, get_current_uid};
 
 use model::{delete_tuto, get_resultats, get_tuto, insert_tuto, prepare_query_from, update_tuto};
 use prompts::{invite, menu_principal, rendu};
