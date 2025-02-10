@@ -9,15 +9,14 @@ pub mod service {
     use crate::{Id, Tag, Tuto};
 
     fn establish_connection() -> Database {
-
         let db_path = "./pwiz.db"; // chemin de la BDD
         let db = Database::open_path(&db_path).unwrap();
         let ids: Collection<Id> = db.collection("id");
 
         // Si aucun id en base, on insère un "Hello, World"
-        match ids.find_one(doc! {}).unwrap(){
-            Some(_)=> return db,
-            None=>fixtures::up(&db)
+        match ids.find_one(doc! {}).unwrap() {
+            Some(_) => return db,
+            None => fixtures::up(&db),
         }
 
         return db;
@@ -63,6 +62,7 @@ pub mod service {
                                             tuto_id: tuto.id,
                                             tags: vec![tag.value],
                                             title: tuto.title,
+                                            content_type: tuto.content_type,
                                             content: tuto.content,
                                         };
                                         resultats.push(res);
@@ -105,6 +105,7 @@ pub mod service {
             Some(tuto) => {
                 let mut recap = Recap {
                     title: tuto.title,
+                    content_type: tuto.content_type,
                     content: tuto.content,
                     tags: Vec::new(),
                 };
@@ -165,6 +166,7 @@ pub mod service {
         if let Ok(_) = tutos.insert_one(Tuto {
             id: tuto_id,
             title: recap.title,
+            content_type:recap.content_type,
             content: recap.content,
         }) {
             let docs = recap

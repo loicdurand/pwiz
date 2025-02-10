@@ -25,6 +25,7 @@ pub mod invite {
                     let tags = tags.trim().split_whitespace().map(String::from).collect();
                     return Recap {
                         title,
+                        content_type:String::from("command"),
                         content,
                         tags,
                     };
@@ -64,13 +65,19 @@ pub mod invite {
             title = recap.title;
         }
         //
+        let content_type = String::from("command");
         let mut content = Text::new(&format!("Saisissez son contenu: [{}]", &recap.content))
             .prompt()
             .expect("Contenu non valable");
         if content == "" {
             content = recap.content;
         }
-        let mut mod_recap = Recap::default(Tuto { id, title, content });
+        let mut mod_recap = Recap::default(Tuto {
+            id,
+            title,
+            content_type,
+            content,
+        });
 
         for recap_tag in recap.tags {
             let tag = Text::new(&format!(
