@@ -1,7 +1,11 @@
-use std::{env, process};
+use std::{env, io, process};
 
-use model::{delete_tuto, get_resultats, get_tuto, insert_tuto, prepare_query_from, update_tuto};
+use model::{
+    appliquer_reglages, delete_tuto, get_resultats, get_tuto, insert_tuto, prepare_query_from,
+    update_tuto,
+};
 use prompts::{invite, menu_principal, rendu};
+use utils::pluralize;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -35,12 +39,35 @@ fn lancer_menu() -> () {
 }
 
 fn afficher_tutos(args: &[String]) -> () {
+    let cmd_args: Vec<&String> = args
+        .iter()
+        .filter(|term| term.starts_with("-"))
+        .collect::<Vec<_>>();
+    if cmd_args.len() > 0 {
+        appliquer_reglages(cmd_args);
+    }
+
     let query = prepare_query_from(args);
     let resultats = get_resultats(query);
+    let mut indexes: Vec<i32> = Vec::new();
 
-    println!("{} résultats trouvés: \n", resultats.len());
+    println!("{}", pluralize(resultats.len(), "résultat trouvé", "résultats trouvés"));
     for resultat in resultats {
-        rendu::afficher_resultat(args.len(), resultat);
+        indexes.push(resultat.tuto_id);
+        rendu::afficher_resultat_simple(args.len(), resultat);
+    }
+
+    let mut index = String::new();
+
+    io::stdin()
+        .read_line(&mut index)
+        .expect("Échec de la lecture de l'entrée utilisateur");
+
+    if let Ok(id) = index.trim().parse::<i32>() {
+        if indexes.contains(&id) {
+            let infos = get_tuto(id);
+            rendu::afficher_recap(infos);
+        }
     }
 }
 

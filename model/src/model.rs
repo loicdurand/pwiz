@@ -11,7 +11,8 @@ pub mod model {
     pub struct Tuto {
         pub id: i32,
         pub title: String,
-        pub content: String,
+        pub content_type: String,
+        pub content: Vec<String>,
     }
 
     #[derive(Debug, Serialize, Deserialize)]
@@ -26,30 +27,35 @@ pub mod model {
         pub tuto_id: i32,
         pub tags: Vec<String>, // tags trouvés parmi les arguments
         pub title: String,
-        pub content: String,
+        pub content_type: String,
+        pub content: Vec<String>,
     }
 
     #[derive(Debug, Serialize, Deserialize)]
     pub struct Recap {
         pub title: String,
-        pub content: String,
+        pub content_type: String,
+        pub content: Vec<String>,
         pub tags: Vec<String>, // tags trouvés parmi les arguments
     }
 
     impl Recap {
-        pub fn new(tuto: Tuto) -> Recap {
-            Recap {
+        pub fn new() -> Self {
+            Self {
+                title: String::from(""),
+                content_type: String::from(""),
+                content: Vec::new(),
+                tags: Vec::new(),
+            }
+        }
+        pub fn default(tuto: Tuto) -> Self {
+            Self {
                 title: tuto.title,
+                content_type: tuto.content_type,
                 content: tuto.content,
                 tags: Vec::new(),
             }
         }
-        pub fn default() -> Recap {
-            Recap {
-                title: String::from(""),
-                content: String::from(""),
-                tags: Vec::new(),
-            }
-        }
     }
+
 }

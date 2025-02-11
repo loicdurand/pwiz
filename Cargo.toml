@@ -1,11 +1,12 @@
 [package]
 name = "pwiz"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2021"
 
 [dependencies]
 model = { path = "./model" }
 prompts = { path = "./prompts" }
+utils = { path = "./utils" }
 
 colored = "3.0.0"
 dotenvy = "0.15.7"

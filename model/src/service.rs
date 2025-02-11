@@ -1,6 +1,5 @@
 pub mod service {
 
-    // use dotenvy::dotenv;
     use polodb_core::{bson, bson::doc, Collection, CollectionT, Database};
     use std::process;
 
@@ -10,18 +9,15 @@ pub mod service {
     use crate::{Id, Tag, Tuto};
 
     fn establish_connection() -> Database {
-        // dotenv().ok(); //charge les variables présente dans le .env dans l'environnement
-
         let db_path = "./pwiz.db"; // chemin de la BDD
-        let load_fixtures = "0"; //si elle n'existe pas on lève une erreur
-
-        if load_fixtures.parse::<i8>().unwrap() == 1 {
-            // Attention! Le programme quittera après exécution des fixtures: -> remettre LOAD_FIXTURES=0
-            fixtures::up();
-            process::exit(1);
-        }
-
         let db = Database::open_path(&db_path).unwrap();
+        let ids: Collection<Id> = db.collection("id");
+
+        // Si aucun id en base, on insère un "Hello, World"
+        match ids.find_one(doc! {}).unwrap() {
+            Some(_) => return db,
+            None => fixtures::up(&db),
+        }
 
         return db;
     }
@@ -66,6 +62,7 @@ pub mod service {
                                             tuto_id: tuto.id,
                                             tags: vec![tag.value],
                                             title: tuto.title,
+                                            content_type: tuto.content_type,
                                             content: tuto.content,
                                         };
                                         resultats.push(res);
@@ -108,6 +105,7 @@ pub mod service {
             Some(tuto) => {
                 let mut recap = Recap {
                     title: tuto.title,
+                    content_type: tuto.content_type,
                     content: tuto.content,
                     tags: Vec::new(),
                 };
@@ -149,12 +147,15 @@ pub mod service {
         match id {
             Some(id) => {
                 tuto_id = &id.value + 1;
-                ids.update_one(doc!{"value":&id.value}, doc! {
-                    "$set":{
-                        "value":&tuto_id,
-                    }
-                })
-                    .unwrap();
+                ids.update_one(
+                    doc! {"value":&id.value},
+                    doc! {
+                        "$set":{
+                            "value":&tuto_id,
+                        }
+                    },
+                )
+                .unwrap();
             }
             None => {
                 tuto_id = 1;
@@ -165,6 +166,7 @@ pub mod service {
         if let Ok(_) = tutos.insert_one(Tuto {
             id: tuto_id,
             title: recap.title,
+            content_type:recap.content_type,
             content: recap.content,
         }) {
             let docs = recap
@@ -223,13 +225,33 @@ pub mod service {
         .unwrap();
     }
 
-    pub fn delete_tuto(id:i32){
+    pub fn delete_tuto(id: i32) {
         let db: Database = establish_connection();
         let tutos: Collection<Tuto> = db.collection("tutos");
         let tags: Collection<Tag> = db.collection("tags");
 
         tags.delete_many(doc! {"tuto_id":{"$eq":id}}).unwrap();
         tutos.delete_one(doc! {"id":{"$eq":id}}).unwrap();
-        
+    }
+
+    pub fn appliquer_reglages(args: Vec<&String>) -> () {
+        let db: Database = establish_connection();
+        let tutos: Collection<Tuto> = db.collection("tutos");
+        let tags: Collection<Tag> = db.collection("tags");
+        let ids:Collection<Id> = db.collection("id");
+
+        let mut reglages:Vec<String> = Vec::new();
+        for arg in args {
+            match arg.as_str() {
+                "-d" => {
+                    tutos.drop().unwrap();
+                    tags.drop().unwrap();
+                    ids.drop().unwrap();
+                    reglages.push(String::from("suppression des collections"));
+                }
+                _ => println!("Option non reconnue: {}", arg),
+            }
+        }
+        println!("Reglages appliqués: {:?}", reglages);
     }
 }
