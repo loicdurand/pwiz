@@ -17,7 +17,7 @@ pub fn up(db: &Database) -> () {
             id: first,
             title: String::from("Saluer le monde!"),
             content_type:String::from("command"),
-            content: String::from("echo \"Hello, world!\""),
+            content: vec!(String::from("echo \"Hello, world!\"")),
         })
         .unwrap();
 

@@ -233,4 +233,25 @@ pub mod service {
         tags.delete_many(doc! {"tuto_id":{"$eq":id}}).unwrap();
         tutos.delete_one(doc! {"id":{"$eq":id}}).unwrap();
     }
+
+    pub fn appliquer_reglages(args: Vec<&String>) -> () {
+        let db: Database = establish_connection();
+        let tutos: Collection<Tuto> = db.collection("tutos");
+        let tags: Collection<Tag> = db.collection("tags");
+        let ids:Collection<Id> = db.collection("id");
+
+        let mut reglages:Vec<String> = Vec::new();
+        for arg in args {
+            match arg.as_str() {
+                "-d" => {
+                    tutos.drop().unwrap();
+                    tags.drop().unwrap();
+                    ids.drop().unwrap();
+                    reglages.push(String::from("suppression des collections"));
+                }
+                _ => println!("Option non reconnue: {}", arg),
+            }
+        }
+        println!("Reglages appliqués: {:?}", reglages);
+    }
 }

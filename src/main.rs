@@ -1,7 +1,9 @@
 use std::{env, process};
-use users::{get_user_by_uid, get_current_uid};
 
-use model::{delete_tuto, get_resultats, get_tuto, insert_tuto, prepare_query_from, update_tuto};
+use model::{
+    appliquer_reglages, delete_tuto, get_resultats, get_tuto, insert_tuto, prepare_query_from,
+    update_tuto,
+};
 use prompts::{invite, menu_principal, rendu};
 
 fn main() {
@@ -36,15 +38,17 @@ fn lancer_menu() -> () {
 }
 
 fn afficher_tutos(args: &[String]) -> () {
+    let cmd_args: Vec<&String> = args.iter().filter(|term| term.starts_with("-")).collect::<Vec<_>>();
+    if cmd_args.len() > 0 {
+        appliquer_reglages(cmd_args);
+    }
+
     let query = prepare_query_from(args);
     let resultats = get_resultats(query);
 
     println!("{} résultats trouvés: \n", resultats.len());
     for resultat in resultats {
-        match resultat.content_type.as_str() {
-            "script" => rendu::afficher_resultat_script(args.len(), resultat),
-            _ => rendu::afficher_resultat_simple(args.len(), resultat),
-        }
+        rendu::afficher_resultat_simple(args.len(), resultat);
     }
 }
 

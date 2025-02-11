@@ -23,17 +23,7 @@ pub mod rendu {
             "{}\n{}\n>>> {}\n",
             ligne_des_tags,
             resultat.title.bold(),
-            resultat.content.bold().blue()
-        );
-    }
-
-    pub fn afficher_resultat_script(nb_tags_demandes: usize, resultat: Resultat) -> () {
-        let ligne_des_tags = ligne_des_tags(nb_tags_demandes, &resultat);
-        println!(
-            "{}\n{}\n>>> {}\n",
-            ligne_des_tags,
-            resultat.title.bold(),
-            resultat.content.bold().blue()
+            resultat.content.join("\n").bold().blue()
         );
     }
 
@@ -52,7 +42,7 @@ pub mod rendu {
                 Cell::new(format!(
                     "Titre: {}\nContenu: {}\nTags: {}",
                     &resultat.title.bold(),
-                    &resultat.content.bold().blue(),
+                    &resultat.content.join("\n").bold().blue(),
                     &resultat.tags.join(", ")
                 )),
             ]);
@@ -66,7 +56,7 @@ pub mod rendu {
         println!(
             "Titre: {}\nContenu: {}\nTags: {}",
             &recap.title.bold(),
-            &recap.content.bold().blue(),
+            &recap.content.join("\n").bold().blue(),
             &recap.tags.join(", ")
         );
     }
@@ -80,7 +70,7 @@ pub mod rendu {
             ])
             .add_row(vec![
                 Cell::new("Contenu"),
-                Cell::new(&recap.content)
+                Cell::new(&recap.content.join("\n"))
                     .add_attribute(Attribute::Bold)
                     .fg(Color::Blue),
             ])
@@ -94,4 +84,5 @@ pub mod rendu {
         let confirm = Text::new("").prompt().expect("Saisissez une lettre [Y/n]");
         confirm
     }
+
 }

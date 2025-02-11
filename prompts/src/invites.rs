@@ -17,20 +17,35 @@ pub mod invite {
 
     pub fn demander_infos_tuto() -> Recap {
         let abort = Recap::new();
+        let mut content = Vec::new();
+        let mut i: usize = 0;
         if let Ok(title) = Text::new("Quel sera le titre de votre tutoriel?").prompt() {
-            if let Ok(content) = Text::new("Quel sera le contenu de votre tutoriel?").prompt() {
-                if let Ok(tags) =
-                    Text::new("Indiquez les tags permettant de rechercher ce tutoriel:").prompt()
-                {
-                    let tags = tags.trim().split_whitespace().map(String::from).collect();
-                    return Recap {
-                        title,
-                        content_type:String::from("command"),
-                        content,
-                        tags,
-                    };
+            loop {
+                let line = Text::new("Contenu du tutoriel: [:q] pour terminer")
+                    .prompt()
+                    .expect("Contenu non valable");
+                if line == ":q" {
+                    println!("Terminé!");
+                    break;
+                } else {
+                    println!("Ligne ajoutée: {}", line);
+                    content.push(line);
                 }
+                i = &i + 1;
             }
+
+            if let Ok(tags) =
+                Text::new("Indiquez les tags permettant de rechercher ce tutoriel:").prompt()
+            {
+                let tags = tags.trim().split_whitespace().map(String::from).collect();
+                return Recap {
+                    title,
+                    content_type: String::from("command"),
+                    content,
+                    tags,
+                };
+            }
+
             return abort;
         } else {
             return abort;
@@ -66,11 +81,29 @@ pub mod invite {
         }
         //
         let content_type = String::from("command");
-        let mut content = Text::new(&format!("Saisissez son contenu: [{}]", &recap.content))
-            .prompt()
-            .expect("Contenu non valable");
-        if content == "" {
-            content = recap.content;
+        let mut content = Vec::new();
+        let mut i: usize = 0;
+        loop {
+            if i == recap.content.len() {
+                break;
+            }
+            println!("Ligne {}: >>> {}", i, recap.content[i].green());
+            let line = Text::new("Contenu du tutoriel: [:q] pour terminer, [-] pour supprimer")
+                .prompt()
+                .expect("Contenu non valable");
+            if line == ":q" {
+                println!("Terminé!");
+                break;
+            } else if line == "" {
+                println!("Ligne inchangée");
+                content.push(recap.content[i].to_owned());
+            } else if line != "-" {
+                println!("Ligne modifiée: {}", &line);
+                content.push(String::from(line));
+            } else {
+                println!("Ligne supprimée");
+            }
+            i = &i + 1;
         }
         let mut mod_recap = Recap::default(Tuto {
             id,
