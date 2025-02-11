@@ -19,11 +19,21 @@ pub mod rendu {
 
     pub fn afficher_resultat_simple(nb_tags_demandes: usize, resultat: Resultat) -> () {
         let ligne_des_tags = ligne_des_tags(nb_tags_demandes, &resultat);
+        let shorter = if resultat.content.len() > 8 {
+            let mut tmp = resultat.content[..4].to_vec();
+            tmp.push(format!(
+                "... -> [{}] pour afficher la suite",
+                resultat.tuto_id
+            ));
+            tmp
+        } else {
+            resultat.content.clone()
+        };
         println!(
-            "{}\n{}\n>>> {}\n",
+            "{}\n{}\n{}\n",
             ligne_des_tags,
             resultat.title.bold(),
-            resultat.content.join("\n").bold().blue()
+            shorter.join("\n").bold().blue()
         );
     }
 
@@ -54,7 +64,7 @@ pub mod rendu {
 
     pub fn afficher_recap(recap: Recap) -> () {
         println!(
-            "Titre: {}\nContenu: {}\nTags: {}",
+            "Titre: {}\nContenu: \n{}\nTags: {}",
             &recap.title.bold(),
             &recap.content.join("\n").bold().blue(),
             &recap.tags.join(", ")
@@ -84,5 +94,4 @@ pub mod rendu {
         let confirm = Text::new("").prompt().expect("Saisissez une lettre [Y/n]");
         confirm
     }
-
 }
