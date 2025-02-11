@@ -4,6 +4,7 @@ pub mod rendu {
     use comfy_table::*;
     use inquire::Text;
     use model::{Recap, Resultat};
+    use utils::pluralize;
 
     fn ligne_des_tags(nb_tags_demandes: usize, resultat: &Resultat) -> String {
         let score: i8 = if nb_tags_demandes > 0 {
@@ -12,7 +13,8 @@ pub mod rendu {
             0
         };
         let tags = resultat.tags.join(", ");
-        let ligne_des_tags = format!("{score}/{nb_tags_demandes} tags trouvés: {tags}");
+        let x_tags_trouves = pluralize(nb_tags_demandes, "tag trouvé", "tags trouvés");
+        let ligne_des_tags = format!("{score}/{x_tags_trouves}: {tags}");
 
         ligne_des_tags
     }
@@ -47,12 +49,20 @@ pub mod rendu {
         resultats.sort_by(|a, b| a.tuto_id.cmp(&b.tuto_id));
         for resultat in resultats {
             indexes.push(resultat.tuto_id);
+            let content = if resultat.content.len() > 8 {
+                let mut tmp = resultat.content[..4].to_vec();
+                tmp.push(String::from("..."));
+                tmp
+            } else {
+                resultat.content.clone()
+            };
+
             table.add_row(vec![
                 Cell::new(&resultat.tuto_id),
                 Cell::new(format!(
-                    "Titre: {}\nContenu: {}\nTags: {}",
+                    "Titre: {}\nContenu:\n{}\nTags: {}",
                     &resultat.title.bold(),
-                    &resultat.content.join("\n").bold().blue(),
+                    &content.join("\n").bold().blue(),
                     &resultat.tags.join(", ")
                 )),
             ]);

@@ -5,6 +5,7 @@ use model::{
     update_tuto,
 };
 use prompts::{invite, menu_principal, rendu};
+use utils::pluralize;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -50,7 +51,7 @@ fn afficher_tutos(args: &[String]) -> () {
     let resultats = get_resultats(query);
     let mut indexes: Vec<i32> = Vec::new();
 
-    println!("{} résultats trouvés: \n", resultats.len());
+    println!("{}", pluralize(resultats.len(), "résultat trouvé", "résultats trouvés"));
     for resultat in resultats {
         indexes.push(resultat.tuto_id);
         rendu::afficher_resultat_simple(args.len(), resultat);
