@@ -628,7 +628,7 @@ dependencies = [
 
 [[package]]
 name = "pwiz"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "colored",
  "comfy-table",
