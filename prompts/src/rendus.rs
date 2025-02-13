@@ -19,24 +19,29 @@ pub mod rendu {
         ligne_des_tags
     }
 
-    pub fn afficher_resultat_simple(nb_tags_demandes: usize, resultat: Resultat) -> () {
+    pub fn afficher_resultat_simple(nb_tags_demandes: usize, resultat: Resultat) -> i32 {
+        let mut shorted_index: i32 = -1;
         let ligne_des_tags = ligne_des_tags(nb_tags_demandes, &resultat);
         let shorter = if resultat.content.len() > 8 {
             let mut tmp = resultat.content[..4].to_vec();
             tmp.push(format!(
                 "... -> [{}] pour afficher la suite",
-                resultat.tuto_id
+                &resultat.tuto_id
             ));
+            shorted_index = resultat.tuto_id;
             tmp
         } else {
             resultat.content.clone()
         };
         println!(
-            "{}\n{}\n{}\n",
+            "{}\nAuteur: {}\n{}\n{}\n",
             ligne_des_tags,
+            resultat.author,
             resultat.title.bold(),
             shorter.join("\n").bold().blue()
         );
+
+        shorted_index
     }
 
     pub fn afficher_table_des_tutoriels(mut resultats: Vec<Resultat>) -> Vec<i32> {
@@ -60,7 +65,8 @@ pub mod rendu {
             table.add_row(vec![
                 Cell::new(&resultat.tuto_id),
                 Cell::new(format!(
-                    "Titre: {}\nContenu:\n{}\nTags: {}",
+                    "Auteur: {}\nTitre: {}\nContenu:\n{}\nTags: {}",
+                    &resultat.author,
                     &resultat.title.bold(),
                     &content.join("\n").bold().blue(),
                     &resultat.tags.join(", ")

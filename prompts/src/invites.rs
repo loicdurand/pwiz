@@ -38,6 +38,7 @@ pub mod invite {
             {
                 let tags = tags.trim().split_whitespace().map(String::from).collect();
                 return Recap {
+                    author:String::from(""),
                     title,
                     content_type: String::from("command"),
                     content,
@@ -107,6 +108,7 @@ pub mod invite {
             i = &i + 1;
         }
         let mut mod_recap = Recap::default(Tuto {
+            author: String::from(""),
             id,
             title,
             content_type,

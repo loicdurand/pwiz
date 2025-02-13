@@ -1,5 +1,7 @@
 pub mod menu_principal {
 
+    use std::process;
+
     use comfy_table::*;
     use inquire::Text;
 
@@ -14,15 +16,33 @@ pub mod menu_principal {
             .add_row(vec!["4", "Supprimer un tutoriel"]);
 
         println!("Aucun argument passé, lancement du menu:\n{table}");
+        let cmd_num: usize;
 
-        let num = Text::new("Que souhaitez-vous faire? [0, 1, 2, 3, 4]")
-            .prompt()
-            .expect("Vous devez saisir un chiffre!")
-            .parse::<usize>()
-            .expect(
-                "Veuillez entrer un chiffre correspondant à l'action que vous souhaitez exécuter.",
-            );
+        loop {
+            let cmd = Text::new("Que souhaitez-vous faire? [0, 1, 2, 3, 4]\n").prompt();
+            match cmd {
+                Ok(cmd) => {
+                    if cmd.parse::<usize>().is_ok() {
+                        if let Ok(num) = cmd.parse::<usize>() {
+                            if num <= 4 {
+                                cmd_num = num;
+                                break;
+                            } else {
+                                println!("Veuillez entrer un chiffre correspondant à l'action que vous souhaitez exécuter.");
+                            }
+                        } else {
+                            println!("Veuillez entrer un chiffre correspondant à l'action que vous souhaitez exécuter.");
+                        }
+                    } else if utils::is_string(&cmd) {
+                        println!("Vous devez saisir un chiffre!");
+                    } else {
+                        process::exit(0);
+                    }
+                }
+                _ => process::exit(0),
+            }
+        }
 
-        num
+        cmd_num
     }
 }
