@@ -9,3 +9,4 @@ utils = { path = "../utils" }
 colored = "3.0.0"
 comfy-table = "7.1.4"
 inquire = "0.7.5"
+ctrlc = "3.4.5"

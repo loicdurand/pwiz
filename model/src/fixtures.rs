@@ -1,6 +1,5 @@
 use crate::model::model::{Id, Tag, Tuto};
 use polodb_core::{bson::doc, Collection, CollectionT, Database};
-
 pub fn up(db: &Database) -> () {
     // db.create_collection("id").unwrap();
     // db.create_collection("tutos").unwrap();
@@ -14,10 +13,11 @@ pub fn up(db: &Database) -> () {
 
     tutos
         .insert_one(Tuto {
+            author: String::from("--"),
             id: first,
             title: String::from("Saluer le monde!"),
-            content_type:String::from("command"),
-            content: vec!(String::from("echo \"Hello, world!\"")),
+            content_type: String::from("command"),
+            content: vec![String::from("echo \"Hello, world!\"")],
         })
         .unwrap();
 

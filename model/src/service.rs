@@ -2,6 +2,7 @@ pub mod service {
 
     use polodb_core::{bson, bson::doc, Collection, CollectionT, Database};
     use std::process;
+    use whoami::username;
 
     use crate::fixtures;
     use crate::Recap;
@@ -58,6 +59,7 @@ pub mod service {
 
                                     if let None = index {
                                         let res = Resultat {
+                                            author: tuto.author,
                                             score: 1,
                                             tuto_id: tuto.id,
                                             tags: vec![tag.value],
@@ -104,6 +106,7 @@ pub mod service {
         match tuto {
             Some(tuto) => {
                 let mut recap = Recap {
+                    author: tuto.author,
                     title: tuto.title,
                     content_type: tuto.content_type,
                     content: tuto.content,
@@ -164,9 +167,10 @@ pub mod service {
         }
 
         if let Ok(_) = tutos.insert_one(Tuto {
+            author: username(),
             id: tuto_id,
             title: recap.title,
-            content_type:recap.content_type,
+            content_type: recap.content_type,
             content: recap.content,
         }) {
             let docs = recap
@@ -238,9 +242,9 @@ pub mod service {
         let db: Database = establish_connection();
         let tutos: Collection<Tuto> = db.collection("tutos");
         let tags: Collection<Tag> = db.collection("tags");
-        let ids:Collection<Id> = db.collection("id");
+        let ids: Collection<Id> = db.collection("id");
 
-        let mut reglages:Vec<String> = Vec::new();
+        let mut reglages: Vec<String> = Vec::new();
         for arg in args {
             match arg.as_str() {
                 "-d" => {

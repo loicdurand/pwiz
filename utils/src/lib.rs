@@ -7,6 +7,10 @@ mod utils {
             format!("{} {}", count, plural)
         }
     }
+
+    pub fn is_string(s: &str) -> bool {
+        s.chars().all(|c| c.is_alphabetic())
+    }
 }
 
-pub use utils::pluralize;
+pub use utils::*;

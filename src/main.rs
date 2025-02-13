@@ -1,13 +1,22 @@
-use std::{env, io, process};
-
 use model::{
     appliquer_reglages, delete_tuto, get_resultats, get_tuto, insert_tuto, prepare_query_from,
     update_tuto,
 };
 use prompts::{invite, menu_principal, rendu};
+use signal_hook::{consts::SIGINT, iterator::Signals};
+use std::{env, error::Error, io, process, thread};
 use utils::pluralize;
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
+    let mut signals = Signals::new([SIGINT])?;
+
+    thread::spawn(move || {
+        for _ in signals.forever() {
+            println!("Bye!");
+            process::exit(0);
+        }
+    });
+
     let args: Vec<String> = env::args().collect();
     let args = &args[1..];
     let args_len: usize = args.len();
@@ -19,6 +28,8 @@ fn main() {
         // Aucun argument -> lance le menu:
         lancer_menu();
     }
+
+    Ok(())
 }
 
 fn lancer_menu() -> () {
@@ -50,23 +61,31 @@ fn afficher_tutos(args: &[String]) -> () {
     let query = prepare_query_from(args);
     let resultats = get_resultats(query);
     let mut indexes: Vec<i32> = Vec::new();
+    let mut shorted: i32 = -1;
 
-    println!("{}", pluralize(resultats.len(), "résultat trouvé", "résultats trouvés"));
+    println!(
+        "{}",
+        pluralize(resultats.len(), "résultat trouvé", "résultats trouvés")
+    );
     for resultat in resultats {
         indexes.push(resultat.tuto_id);
-        rendu::afficher_resultat_simple(args.len(), resultat);
+        let i = rendu::afficher_resultat_simple(args.len(), resultat);
+        if i != -1 {
+            shorted = i;
+        }
     }
+    if shorted != -1 {
+        let mut index = String::new();
 
-    let mut index = String::new();
+        io::stdin()
+            .read_line(&mut index)
+            .expect("Échec de la lecture de l'entrée utilisateur");
 
-    io::stdin()
-        .read_line(&mut index)
-        .expect("Échec de la lecture de l'entrée utilisateur");
-
-    if let Ok(id) = index.trim().parse::<i32>() {
-        if indexes.contains(&id) {
-            let infos = get_tuto(id);
-            rendu::afficher_recap(infos);
+        if let Ok(id) = index.trim().parse::<i32>() {
+            if indexes.contains(&id) {
+                let infos = get_tuto(id);
+                rendu::afficher_recap(infos);
+            }
         }
     }
 }
