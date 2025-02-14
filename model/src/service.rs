@@ -10,7 +10,7 @@ pub mod service {
     use crate::{Id, Tag, Tuto};
 
     fn establish_connection() -> Database {
-        let db_path = "./pwiz.db"; // chemin de la BDD
+        let db_path = format!("/home/{}/pwiz.db", username()); // chemin de la BDD
         let db = Database::open_path(&db_path).unwrap();
         let ids: Collection<Id> = db.collection("id");
 
